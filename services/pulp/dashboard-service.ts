@@ -8,6 +8,7 @@ export type PulpDashboardSummary = {
   groupsCount: number;
   rpmRepositories: number;
   debRepositories: number;
+  fileRepositories: number;
   repositoriesTotal: number;
 };
 

@@ -140,6 +140,11 @@ export type PulpRpmRepository = {
   pulp_href: string;
 };
 
+export type PulpRepository = {
+  name: string;
+  pulp_href: string;
+};
+
 /** Fields from GET /repositories/rpm/rpm/{id}/ used by the edit UI. */
 export type PulpRpmRepositoryDetail = {
   kind: "rpm";
@@ -172,7 +177,24 @@ export type PulpDebRepositoryDetail = {
   structured_repo: boolean;
 };
 
-export type PulpRepositoryDetail = PulpRpmRepositoryDetail | PulpDebRepositoryDetail;
+export type PulpFileRepositoryDetail = {
+  kind: "file";
+  pulp_href: string;
+  name: string;
+  pulp_created: string | null;
+  versions_href: string | null;
+  latest_version_href: string | null;
+  description: string | null;
+  retain_repo_versions: number | null;
+  remote: string | null;
+  autopublish: boolean;
+  manifest: string | null;
+};
+
+export type PulpRepositoryDetail =
+  | PulpRpmRepositoryDetail
+  | PulpDebRepositoryDetail
+  | PulpFileRepositoryDetail;
 
 export type RpmRepositoryUpdatePayload = {
   name: string;
@@ -222,6 +244,26 @@ export type DebRepositoryCreatePayload = {
   description: string;
   retain_repo_versions: number | null;
   remote: string | null;
+};
+
+export type FileRepositoryUpdatePayload = {
+  name: string;
+  description: string | null;
+  retain_repo_versions: number | null;
+  remote: string | null;
+  autopublish: boolean;
+  manifest: string | null;
+};
+
+/** POST /repositories/file/file/ — matches Pulp File repository create body. */
+export type FileRepositoryCreatePayload = {
+  pulp_labels: Record<string, string>;
+  name: string;
+  description: string;
+  retain_repo_versions: number | null;
+  remote: string | null;
+  autopublish: boolean;
+  manifest: string | null;
 };
 
 /** Per-type counts in repository version content_summary (e.g. rpm.package). */

@@ -17,11 +17,13 @@ import { pulpRepositoryManagementService } from "@/services/pulp/repository-mana
 import type {
   DebRepositoryUpdatePayload,
   PulpDebRepositoryDetail,
+  PulpFileRepositoryDetail,
   PulpRpmRepositoryDetail,
+  FileRepositoryUpdatePayload,
   RpmRepositoryUpdatePayload,
 } from "@/services/pulp/types";
 
-type RepoKind = "rpm" | "deb";
+type RepoKind = "rpm" | "deb" | "file";
 
 const checksumAlgorithms = ["sha256", "sha1", "md5", "sha224", "sha384", "sha512"] as const;
 
@@ -56,6 +58,17 @@ function debDetailToForm(d: PulpDebRepositoryDetail): DebRepositoryUpdatePayload
     remote: d.remote,
     autopublish: d.autopublish,
     structured_repo: d.structured_repo,
+  };
+}
+
+function fileDetailToForm(d: PulpFileRepositoryDetail): FileRepositoryUpdatePayload {
+  return {
+    name: d.name,
+    description: d.description,
+    retain_repo_versions: d.retain_repo_versions,
+    remote: d.remote,
+    autopublish: d.autopublish,
+    manifest: d.manifest,
   };
 }
 
@@ -146,7 +159,8 @@ function ChecksumSelect({
 
 function RepositoriesEditInner() {
   const searchParams = useSearchParams();
-  const kindParam = (searchParams.get("kind") === "deb" ? "deb" : "rpm") as RepoKind;
+  const rawKind = searchParams.get("kind");
+  const kindParam: RepoKind = rawKind === "deb" || rawKind === "file" ? rawKind : "rpm";
   const pulpHref = searchParams.get("pulp_href")?.trim() ?? "";
 
   const { sessionUser, isLoading, isCheckingSession, hasSession, error, setError, logout } =
@@ -159,6 +173,7 @@ function RepositoriesEditInner() {
   const [rpm, setRpm] = useState<RpmRepositoryUpdatePayload | null>(null);
   const [rpmMeta, setRpmMeta] = useState<RpmReadOnlyMeta | null>(null);
   const [deb, setDeb] = useState<DebRepositoryUpdatePayload | null>(null);
+  const [fileRepo, setFileRepo] = useState<FileRepositoryUpdatePayload | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [saveAlsoPublish, setSaveAlsoPublish] = useState(false);
@@ -171,6 +186,7 @@ function RepositoriesEditInner() {
       setRpm(null);
       setRpmMeta(null);
       setDeb(null);
+      setFileRepo(null);
       setSaveAlsoPublish(false);
       setSaveAlsoDistribute(false);
       setActivityLog([]);
@@ -201,10 +217,17 @@ function RepositoriesEditInner() {
             latest_version_href: detail.latest_version_href,
           });
           setDeb(null);
-        } else {
+          setFileRepo(null);
+        } else if (detail.kind === "deb") {
           setDeb(debDetailToForm(detail));
           setRpm(null);
           setRpmMeta(null);
+          setFileRepo(null);
+        } else {
+          setFileRepo(fileDetailToForm(detail));
+          setRpm(null);
+          setRpmMeta(null);
+          setDeb(null);
         }
         setActivityLog((prev) =>
           prev.map((line) =>
@@ -223,6 +246,7 @@ function RepositoriesEditInner() {
         setRpm(null);
         setRpmMeta(null);
         setDeb(null);
+        setFileRepo(null);
         const message = e instanceof Error ? e.message : "Failed to load repository.";
         setError(message);
         setActivityLog((prev) =>
@@ -250,7 +274,10 @@ function RepositoriesEditInner() {
         setError("Repository name is required.");
         return;
       }
-    } else if (!deb?.name.trim()) {
+    } else if (loadedKind === "deb" && !deb?.name.trim()) {
+      setError("Repository name is required.");
+      return;
+    } else if (loadedKind === "file" && !fileRepo?.name.trim()) {
       setError("Repository name is required.");
       return;
     }
@@ -270,6 +297,8 @@ function RepositoriesEditInner() {
           ? await pulpRepositoryManagementService.updateRpm(pulpHref, rpm)
           : loadedKind === "deb" && deb
             ? await pulpRepositoryManagementService.updateDeb(pulpHref, deb)
+            : loadedKind === "file" && fileRepo
+              ? await pulpRepositoryManagementService.updateFile(pulpHref, fileRepo)
             : null;
       if (!result) {
         setError("Nothing to save.");
@@ -299,6 +328,9 @@ function RepositoriesEditInner() {
       if (loadedKind === "deb" && deb) {
         setDeb({ ...deb, name: result.name });
       }
+      if (loadedKind === "file" && fileRepo) {
+        setFileRepo({ ...fileRepo, name: result.name });
+      }
 
       let publishFailed = false;
       if (saveAlsoPublish) {
@@ -311,7 +343,9 @@ function RepositoriesEditInner() {
           const published =
             loadedKind === "rpm"
               ? await pulpRepositoryManagementService.publishRpm(pulpHref)
-              : await pulpRepositoryManagementService.publishDeb(pulpHref);
+              : loadedKind === "deb"
+                ? await pulpRepositoryManagementService.publishDeb(pulpHref)
+                : await pulpRepositoryManagementService.publishFile(pulpHref);
           const pubDetail = [
             published.publication ? `publication: ${published.publication}` : null,
             published.task ? `task: ${published.task}` : null,
@@ -398,7 +432,7 @@ function RepositoriesEditInner() {
   return (
     <AdminShell
       title="Edit repository"
-      description="Update repository settings (matches Pulp RPM / Debian APT repository APIs)."
+      description="Update repository settings (matches Pulp RPM, Debian APT, and File repository APIs)."
       hasSession={hasSession}
       sessionUser={sessionUser}
       isLoading={isLoading || isLoadingDetail || isSubmitting}
@@ -415,7 +449,7 @@ function RepositoriesEditInner() {
           <CardContent className="space-y-3 text-sm">
             <p>Open this page from the repository list using Edit, or append query parameters:</p>
             <p className="break-all font-mono text-xs text-zinc-600 dark:text-zinc-400">
-              /repositories/edit?kind=rpm&amp;pulp_href=…
+              /repositories/edit?kind=file&amp;pulp_href=…
             </p>
             <Link
               href="/repositories/list"
@@ -736,6 +770,114 @@ function RepositoriesEditInner() {
                     </label>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400">
                       RPM-only: create a distribution from the repository list or edit page for RPM repos.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? "Saving…" : "Save"}
+                    </Button>
+                    <Link
+                      href="/repositories/list"
+                      className="inline-flex items-center rounded-md border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+                    >
+                      Back to list
+                    </Link>
+                    <Link
+                      href={`/repositories/content?pulp_href=${encodeURIComponent(pulpHref)}`}
+                      className="inline-flex items-center rounded-md border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+                    >
+                      Content
+                    </Link>
+                  </div>
+                </form>
+              ) : loadedKind === "file" && fileRepo ? (
+                <form className="flex max-w-lg flex-col gap-4" onSubmit={handleSubmit}>
+                  <FormField label="Name">
+                    <Input
+                      value={fileRepo.name}
+                      onChange={(e) => setFileRepo({ ...fileRepo, name: e.target.value })}
+                      required
+                    />
+                  </FormField>
+                  <FormField label="Description">
+                    <textarea
+                      className={textareaClass}
+                      value={fileRepo.description ?? ""}
+                      onChange={(e) =>
+                        setFileRepo({
+                          ...fileRepo,
+                          description: e.target.value === "" ? null : e.target.value,
+                        })
+                      }
+                      rows={3}
+                    />
+                  </FormField>
+                  <FormField label="Retain repository versions">
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="empty = no limit"
+                      value={fileRepo.retain_repo_versions === null ? "" : fileRepo.retain_repo_versions}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === "") {
+                          setFileRepo({ ...fileRepo, retain_repo_versions: null });
+                          return;
+                        }
+                        const n = Number(v);
+                        setFileRepo({
+                          ...fileRepo,
+                          retain_repo_versions: Number.isFinite(n) ? Math.trunc(n) : null,
+                        });
+                      }}
+                    />
+                  </FormField>
+                  <FormField label="Remote (Pulp href)">
+                    <Input
+                      value={fileRepo.remote ?? ""}
+                      onChange={(e) =>
+                        setFileRepo({
+                          ...fileRepo,
+                          remote: e.target.value.trim() === "" ? null : e.target.value.trim(),
+                        })
+                      }
+                      className="font-mono text-xs"
+                    />
+                  </FormField>
+                  <label className="flex cursor-pointer items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={fileRepo.autopublish}
+                      onChange={(e) => setFileRepo({ ...fileRepo, autopublish: e.target.checked })}
+                    />
+                    Autopublish
+                  </label>
+                  <FormField label="Manifest filename">
+                    <Input
+                      value={fileRepo.manifest ?? ""}
+                      onChange={(e) =>
+                        setFileRepo({
+                          ...fileRepo,
+                          manifest: e.target.value.trim() === "" ? null : e.target.value.trim(),
+                        })
+                      }
+                      placeholder="empty = plugin default (PULP_MANIFEST)"
+                    />
+                  </FormField>
+                  <div className="space-y-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+                    <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                      After save
+                    </p>
+                    <label className="flex cursor-pointer items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={saveAlsoPublish}
+                        onChange={(e) => setSaveAlsoPublish(e.target.checked)}
+                      />
+                      Publish repository
+                    </label>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      Distribution management is currently available only for RPM repositories.
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">

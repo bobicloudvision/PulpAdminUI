@@ -1,7 +1,11 @@
 import { cookies } from "next/headers";
 import { getPulpApiUrl, PULP_AUTH_COOKIE, toBasicAuthHeader } from "@/lib/pulp";
 import { requirePulpAuth } from "@/app/api/pulp/_helpers";
-import type { PulpDebRepositoryDetail, PulpRpmRepositoryDetail } from "@/services/pulp/types";
+import type {
+  PulpDebRepositoryDetail,
+  PulpFileRepositoryDetail,
+  PulpRpmRepositoryDetail,
+} from "@/services/pulp/types";
 import { authHeaders, normalizePulpHrefToApiPath, readDetail } from "../_server";
 
 function isRpmRepositoryDetailPath(path: string): boolean {
@@ -10,6 +14,10 @@ function isRpmRepositoryDetailPath(path: string): boolean {
 
 function isDebRepositoryDetailPath(path: string): boolean {
   return path.includes("/repositories/deb/apt/");
+}
+
+function isFileRepositoryDetailPath(path: string): boolean {
+  return path.includes("/repositories/file/file/");
 }
 
 function strOrNull(row: Record<string, unknown>, key: string): string | null {
@@ -79,6 +87,25 @@ function mapDebDetail(row: Record<string, unknown>, pulpHref: string): PulpDebRe
   };
 }
 
+function mapFileDetail(row: Record<string, unknown>, pulpHref: string): PulpFileRepositoryDetail {
+  const name = strOrNull(row, "name") ?? "";
+  const href = strOrNull(row, "pulp_href") ?? pulpHref;
+
+  return {
+    kind: "file",
+    pulp_href: href,
+    name,
+    pulp_created: strOrNull(row, "pulp_created"),
+    versions_href: strOrNull(row, "versions_href"),
+    latest_version_href: strOrNull(row, "latest_version_href"),
+    description: strOrNull(row, "description"),
+    retain_repo_versions: numOrNull(row, "retain_repo_versions"),
+    remote: strOrNull(row, "remote"),
+    autopublish: boolOr(row, "autopublish", false),
+    manifest: strOrNull(row, "manifest"),
+  };
+}
+
 export async function GET(request: Request) {
   const authResult = await requirePulpAuth();
   if (!authResult.ok) {
@@ -92,7 +119,11 @@ export async function GET(request: Request) {
   }
 
   const apiPath = normalizePulpHrefToApiPath(pulpHref);
-  if (!isRpmRepositoryDetailPath(apiPath) && !isDebRepositoryDetailPath(apiPath)) {
+  if (
+    !isRpmRepositoryDetailPath(apiPath) &&
+    !isDebRepositoryDetailPath(apiPath) &&
+    !isFileRepositoryDetailPath(apiPath)
+  ) {
     return Response.json({ detail: "Invalid repository href." }, { status: 400 });
   }
 
@@ -116,6 +147,9 @@ export async function GET(request: Request) {
   if (isRpmRepositoryDetailPath(apiPath)) {
     return Response.json(mapRpmDetail(row, pulpHref));
   }
+  if (isDebRepositoryDetailPath(apiPath)) {
+    return Response.json(mapDebDetail(row, pulpHref));
+  }
 
-  return Response.json(mapDebDetail(row, pulpHref));
+  return Response.json(mapFileDetail(row, pulpHref));
 }

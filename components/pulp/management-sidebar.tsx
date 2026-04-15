@@ -5,6 +5,12 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@/components/ui/cn";
 
+const PROJECT_NAME = process.env.NEXT_PUBLIC_PULP_PROJECT_NAME;
+
+if (!PROJECT_NAME) {
+  throw new Error("Missing PULP_PROJECT_NAME environment variable.");
+}
+
 type ManagementSidebarProps = {
   usersCount: number;
   groupsCount: number;
@@ -55,7 +61,7 @@ const navSections = [
   {
     title: "Repository",
     items: [
-      { href: "/repositories/list", label: "Repositories", hint: "RPM and Debian repos", icon: "repos" },
+      { href: "/repositories/list", label: "Repositories", hint: "RPM, Debian, and File repos", icon: "repos" },
       { href: "/content/list", label: "Content", hint: "Packages and metadata", icon: "content" },
       { href: "/uploads/create", label: "Upload file", hint: "Send file to Pulp", icon: "upload" },
     ] satisfies NavItem[],
@@ -231,8 +237,11 @@ export function ManagementSidebar({ usersCount, groupsCount }: ManagementSidebar
               priority
             />
           </span>
-          <span className="truncate text-sm font-semibold tracking-tight transition-colors duration-200 group-hover/brand:text-zinc-700 dark:group-hover/brand:text-zinc-200">
-            Pulp Admin UI
+          <span
+            suppressHydrationWarning
+            className="truncate text-sm font-semibold tracking-tight transition-colors duration-200 group-hover/brand:text-zinc-700 dark:group-hover/brand:text-zinc-200"
+          >
+            {PROJECT_NAME}
           </span>
         </Link>
 

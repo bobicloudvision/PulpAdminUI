@@ -59,7 +59,7 @@ const quickLinks: QuickLink[] = [
   {
     href: "/repositories/list",
     label: "Repositories",
-    description: "RPM and Debian",
+    description: "RPM, Debian, and File",
     icon: Boxes,
   },
   {
@@ -97,7 +97,7 @@ const quickLinks: QuickLink[] = [
 type StatConfig = {
   key: keyof Pick<
     PulpDashboardSummary,
-    "usersCount" | "groupsCount" | "rpmRepositories" | "debRepositories"
+    "usersCount" | "groupsCount" | "rpmRepositories" | "debRepositories" | "fileRepositories"
   >;
   label: string;
   icon: typeof Users;
@@ -128,6 +128,12 @@ const statCards: StatConfig[] = [
     label: "Debian repositories",
     icon: Boxes,
     iconWrap: "bg-rose-100 text-rose-800 dark:bg-rose-950/45 dark:text-rose-200",
+  },
+  {
+    key: "fileRepositories",
+    label: "File repositories",
+    icon: Boxes,
+    iconWrap: "bg-sky-100 text-sky-800 dark:bg-sky-950/45 dark:text-sky-200",
   },
 ];
 
@@ -218,7 +224,7 @@ export default function DashboardPage() {
           ) : null}
 
           {summary ? (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
               {statCards.map(({ key, label, icon: Icon, iconWrap }) => (
                 <Card
                   key={key}

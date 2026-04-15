@@ -15,6 +15,7 @@ export type PulpDashboardStatsResult =
       groupsCount: number;
       rpmRepositories: number;
       debRepositories: number;
+      fileRepositories: number;
       repositoriesTotal: number;
     }
   | { ok: false; detail: string; status?: number };
@@ -25,11 +26,12 @@ async function loadPulpDashboardStats(authEncoded: string): Promise<PulpDashboar
     return { ok: false, detail: "Invalid session." };
   }
 
-  const [usersRes, groupsRes, rpmRes, debRes] = await Promise.all([
+  const [usersRes, groupsRes, rpmRes, debRes, fileRes] = await Promise.all([
     pulpFetch<PulpCountListResponse>("/users/?limit=1&offset=0", auth),
     pulpFetch<PulpCountListResponse>("/groups/?limit=1&offset=0", auth),
     pulpFetch<PulpCountListResponse>("/repositories/rpm/rpm/?limit=1&offset=0", auth),
     pulpFetch<PulpCountListResponse>("/repositories/deb/apt/?limit=1&offset=0", auth),
+    pulpFetch<PulpCountListResponse>("/repositories/file/file/?limit=1&offset=0", auth),
   ]);
 
   if (!usersRes.ok) {
@@ -44,9 +46,13 @@ async function loadPulpDashboardStats(authEncoded: string): Promise<PulpDashboar
   if (!debRes.ok) {
     return { ok: false, detail: debRes.detail, status: debRes.status };
   }
+  if (!fileRes.ok) {
+    return { ok: false, detail: fileRes.detail, status: fileRes.status };
+  }
 
   const rpm = rpmRes.data.count;
   const deb = debRes.data.count;
+  const file = fileRes.data.count;
 
   return {
     ok: true,
@@ -54,7 +60,8 @@ async function loadPulpDashboardStats(authEncoded: string): Promise<PulpDashboar
     groupsCount: groupsRes.data.count,
     rpmRepositories: rpm,
     debRepositories: deb,
-    repositoriesTotal: rpm + deb,
+    fileRepositories: file,
+    repositoriesTotal: rpm + deb + file,
   };
 }
 

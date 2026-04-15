@@ -2,9 +2,11 @@ import { readApiDetail } from "./http";
 import {
   DebRepositoryCreatePayload,
   DebRepositoryUpdatePayload,
+  FileRepositoryCreatePayload,
+  FileRepositoryUpdatePayload,
   PulpPaginatedResponse,
+  PulpRepository,
   PulpRepositoryDetail,
-  PulpRpmRepository,
   RpmRepositoryCreatePayload,
   RpmRepositoryUpdatePayload,
   PulpRpmRepositoryVersion,
@@ -34,16 +36,22 @@ export type RepositoryUpdateResult = {
 };
 
 export const pulpRepositoryManagementService = {
-  async listRpm(limit = 200, offset = 0): Promise<PulpPaginatedResponse<PulpRpmRepository>> {
+  async listRpm(limit = 200, offset = 0): Promise<PulpPaginatedResponse<PulpRepository>> {
     const response = await fetch(`/api/pulp/repositories/rpm?limit=${limit}&offset=${offset}`);
     if (!response.ok) throw new Error(await readApiDetail(response));
-    return (await response.json()) as PulpPaginatedResponse<PulpRpmRepository>;
+    return (await response.json()) as PulpPaginatedResponse<PulpRepository>;
   },
 
-  async listDeb(limit = 200, offset = 0): Promise<PulpPaginatedResponse<PulpRpmRepository>> {
+  async listDeb(limit = 200, offset = 0): Promise<PulpPaginatedResponse<PulpRepository>> {
     const response = await fetch(`/api/pulp/repositories/deb?limit=${limit}&offset=${offset}`);
     if (!response.ok) throw new Error(await readApiDetail(response));
-    return (await response.json()) as PulpPaginatedResponse<PulpRpmRepository>;
+    return (await response.json()) as PulpPaginatedResponse<PulpRepository>;
+  },
+
+  async listFile(limit = 200, offset = 0): Promise<PulpPaginatedResponse<PulpRepository>> {
+    const response = await fetch(`/api/pulp/repositories/file?limit=${limit}&offset=${offset}`);
+    if (!response.ok) throw new Error(await readApiDetail(response));
+    return (await response.json()) as PulpPaginatedResponse<PulpRepository>;
   },
 
   async createRpm(payload: RpmRepositoryCreatePayload): Promise<RepositoryCreateResult> {
@@ -58,6 +66,16 @@ export const pulpRepositoryManagementService = {
 
   async createDeb(payload: DebRepositoryCreatePayload): Promise<RepositoryCreateResult> {
     const response = await fetch("/api/pulp/repositories/deb/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) throw new Error(await readApiDetail(response));
+    return (await response.json()) as RepositoryCreateResult;
+  },
+
+  async createFile(payload: FileRepositoryCreatePayload): Promise<RepositoryCreateResult> {
+    const response = await fetch("/api/pulp/repositories/file/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -94,6 +112,19 @@ export const pulpRepositoryManagementService = {
     return (await response.json()) as RepositoryUpdateResult;
   },
 
+  async updateFile(
+    pulpHref: string,
+    payload: FileRepositoryUpdatePayload
+  ): Promise<RepositoryUpdateResult> {
+    const response = await fetch("/api/pulp/repositories/file", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pulp_href: pulpHref, ...payload }),
+    });
+    if (!response.ok) throw new Error(await readApiDetail(response));
+    return (await response.json()) as RepositoryUpdateResult;
+  },
+
   async deleteRpm(pulpHref: string): Promise<void> {
     const response = await fetch("/api/pulp/repositories/rpm", {
       method: "DELETE",
@@ -105,6 +136,15 @@ export const pulpRepositoryManagementService = {
 
   async deleteDeb(pulpHref: string): Promise<void> {
     const response = await fetch("/api/pulp/repositories/deb", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pulp_href: pulpHref }),
+    });
+    if (!response.ok) throw new Error(await readApiDetail(response));
+  },
+
+  async deleteFile(pulpHref: string): Promise<void> {
+    const response = await fetch("/api/pulp/repositories/file", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ pulp_href: pulpHref }),
@@ -124,6 +164,16 @@ export const pulpRepositoryManagementService = {
 
   async publishDeb(pulpHref: string): Promise<RepositoryPublishResult> {
     const response = await fetch("/api/pulp/repositories/deb/publish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pulp_href: pulpHref }),
+    });
+    if (!response.ok) throw new Error(await readApiDetail(response));
+    return (await response.json()) as RepositoryPublishResult;
+  },
+
+  async publishFile(pulpHref: string): Promise<RepositoryPublishResult> {
+    const response = await fetch("/api/pulp/repositories/file/publish", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ pulp_href: pulpHref }),

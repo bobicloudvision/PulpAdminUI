@@ -45,7 +45,7 @@ Web admin console for [Pulp 3](https://pulpproject.org/)—manage users, groups,
    cp .env.example .env
    ```
 
-   Set `PULP_BASE_URL` to your Pulp API v3 base (e.g. `https://your-host/pulp/api/v3`).
+   Set `PULP_BASE_URL` to your Pulp API v3 base (e.g. `https://your-host/pulp/api/v3`) and `PULP_PROJECT_NAME` for the sidebar logo title.
 
 2. Install and run:
 
