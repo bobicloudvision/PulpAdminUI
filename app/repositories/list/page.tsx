@@ -515,6 +515,12 @@ export default function RepositoriesListPage() {
                     Task: {distributeResult.task}
                   </p>
                 ) : null}
+                <Link
+                  href="/distributions/list"
+                  className="mt-3 inline-flex rounded-md border border-sky-400/60 bg-white/80 px-3 py-1.5 text-xs font-medium text-sky-900 hover:bg-sky-100/80 dark:border-sky-700 dark:bg-sky-950/50 dark:text-sky-100 dark:hover:bg-sky-900/60"
+                >
+                  Open distributions
+                </Link>
               </div>
             ) : null}
 

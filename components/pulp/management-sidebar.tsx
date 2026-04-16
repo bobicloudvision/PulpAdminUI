@@ -25,6 +25,7 @@ type NavIconName =
   | "groups"
   | "roles"
   | "content"
+  | "distributions"
   | "upload"
   | "repos";
 
@@ -62,6 +63,12 @@ const navSections = [
     title: "Repository",
     items: [
       { href: "/repositories/list", label: "Repositories", hint: "RPM, Debian, and File repos", icon: "repos" },
+      {
+        href: "/distributions/list",
+        label: "Distributions",
+        hint: "Published content endpoints",
+        icon: "distributions",
+      },
       { href: "/content/list", label: "Content", hint: "Packages and metadata", icon: "content" },
       { href: "/uploads/create", label: "Upload file", hint: "Send file to Pulp", icon: "upload" },
     ] satisfies NavItem[],
@@ -194,6 +201,18 @@ function SidebarIcon({ name }: { name: NavIconName }) {
           <path d="M8 9.5h8" />
           <path d="M8 13h8" />
           <path d="M8 16.5h5" />
+        </svg>
+      );
+    case "distributions":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" className={iconClassName}>
+          <circle cx="7" cy="7" r="2.2" />
+          <circle cx="17" cy="7" r="2.2" />
+          <circle cx="12" cy="17" r="2.2" />
+          <path d="M9 8.3 10.8 10" />
+          <path d="M15 8.3 13.2 10" />
+          <path d="M8.3 9 10.8 14.8" />
+          <path d="M15.7 9 13.2 14.8" />
         </svg>
       );
     case "upload":

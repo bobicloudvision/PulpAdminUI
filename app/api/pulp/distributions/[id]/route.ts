@@ -22,8 +22,32 @@ type UpdatePulpDistributionPayload = {
   content_guard?: string | null;
 };
 
-function getRpmDistributionPath(id: string): string {
-  return `/distributions/rpm/rpm/${id}/`;
+function resolveDistributionPath(encodedRef: string): string | null {
+  const decodedRef = decodeURIComponent(encodedRef).trim();
+  if (decodedRef.length === 0) {
+    return null;
+  }
+
+  let pathname = decodedRef;
+  if (/^https?:\/\//i.test(decodedRef)) {
+    try {
+      pathname = new URL(decodedRef).pathname;
+    } catch {
+      return null;
+    }
+  }
+
+  if (!pathname.startsWith("/")) {
+    return null;
+  }
+
+  const distributionsIndex = pathname.indexOf("/distributions/");
+  if (distributionsIndex === -1) {
+    return null;
+  }
+
+  const normalizedPath = pathname.slice(distributionsIndex);
+  return normalizedPath.endsWith("/") ? normalizedPath : `${normalizedPath}/`;
 }
 
 export async function PATCH(
@@ -36,8 +60,9 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  if (!id) {
-    return Response.json({ detail: "Distribution id is required." }, { status: 400 });
+  const distributionPath = resolveDistributionPath(id);
+  if (!distributionPath) {
+    return Response.json({ detail: "Invalid distribution identifier." }, { status: 400 });
   }
 
   let payload: Partial<UpdatePulpDistributionPayload> | null = null;
@@ -69,7 +94,7 @@ export async function PATCH(
   }
 
   const result = await pulpFetch<PulpDistribution>(
-    getRpmDistributionPath(id),
+    distributionPath,
     authResult.auth,
     {
       method: "PATCH",
@@ -99,11 +124,12 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  if (!id) {
-    return Response.json({ detail: "Distribution id is required." }, { status: 400 });
+  const distributionPath = resolveDistributionPath(id);
+  if (!distributionPath) {
+    return Response.json({ detail: "Invalid distribution identifier." }, { status: 400 });
   }
 
-  const result = await pulpFetch(getRpmDistributionPath(id), authResult.auth, {
+  const result = await pulpFetch(distributionPath, authResult.auth, {
     method: "DELETE",
   });
 

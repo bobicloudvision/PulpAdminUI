@@ -15,9 +15,13 @@ type PulpListResponse<T> = {
 
 const DISTRIBUTIONS_PATH = "/api/pulp/distributions";
 
-function extractDistributionId(pulpHref: string): string | null {
-  const match = pulpHref.match(/\/distributions\/rpm\/rpm\/([^/]+)\/?$/);
-  return match?.[1] ?? null;
+function encodeDistributionRef(pulpHref: string): string | null {
+  const normalized = pulpHref.trim();
+  if (normalized.length === 0) {
+    return null;
+  }
+
+  return encodeURIComponent(normalized);
 }
 
 export const pulpDistributionService = {
@@ -66,12 +70,12 @@ export const pulpDistributionService = {
     pulpHref: string,
     payload: UpdatePulpDistributionPayload
   ): Promise<ServiceResult> {
-    const id = extractDistributionId(pulpHref);
-    if (!id) {
+    const encodedRef = encodeDistributionRef(pulpHref);
+    if (!encodedRef) {
       return { ok: false, detail: "Invalid distribution identifier." };
     }
 
-    const response = await fetch(`${DISTRIBUTIONS_PATH}/${id}`, {
+    const response = await fetch(`${DISTRIBUTIONS_PATH}/${encodedRef}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -88,12 +92,12 @@ export const pulpDistributionService = {
   },
 
   async remove(pulpHref: string): Promise<ServiceResult> {
-    const id = extractDistributionId(pulpHref);
-    if (!id) {
+    const encodedRef = encodeDistributionRef(pulpHref);
+    if (!encodedRef) {
       return { ok: false, detail: "Invalid distribution identifier." };
     }
 
-    const response = await fetch(`${DISTRIBUTIONS_PATH}/${id}`, {
+    const response = await fetch(`${DISTRIBUTIONS_PATH}/${encodedRef}`, {
       method: "DELETE",
     });
 
