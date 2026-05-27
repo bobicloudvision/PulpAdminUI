@@ -392,6 +392,10 @@ export type UpdatePulpUserPayload = {
   is_active?: boolean;
 };
 
+export type ChangePulpUserPasswordPayload = {
+  password: string;
+};
+
 export type CreatePulpGroupPayload = {
   name: string;
 };

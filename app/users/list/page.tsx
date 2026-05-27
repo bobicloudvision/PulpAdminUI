@@ -26,11 +26,13 @@ export default function UsersListPage() {
   const { sessionUser, isLoading, isCheckingSession, hasSession, error, logout } =
     usePulpAuthContext();
   const isRedirectingToLogin = useRequireAuth({ hasSession, isCheckingSession });
-  const { users, createUser, updateUser, deleteUser } = usePulpUsers(hasSession);
+  const { users, createUser, updateUser, deleteUser, changeUserPassword } =
+    usePulpUsers(hasSession);
   const { groups } = usePulpGroups(hasSession);
 
   const createDialogTitleId = useId();
   const editDialogTitleId = useId();
+  const passwordDialogTitleId = useId();
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [createUsername, setCreateUsername] = useState("");
@@ -48,6 +50,12 @@ export default function UsersListPage() {
   const [editEmail, setEditEmail] = useState("");
   const [editIsStaff, setEditIsStaff] = useState(false);
   const [editIsActive, setEditIsActive] = useState(true);
+
+  const [passwordUserId, setPasswordUserId] = useState<number | null>(null);
+  const [passwordUsername, setPasswordUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const resetEditForm = useCallback(() => {
     setEditUsername("");
@@ -102,6 +110,48 @@ export default function UsersListPage() {
     await deleteUser(userId);
   }
 
+  const resetPasswordForm = useCallback(() => {
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordError(null);
+  }, []);
+
+  const closePasswordModal = useCallback(() => {
+    setPasswordUserId(null);
+    setPasswordUsername("");
+    resetPasswordForm();
+  }, [resetPasswordForm]);
+
+  function startChangePassword(user: (typeof users)[number]) {
+    setPasswordUserId(user.id);
+    setPasswordUsername(user.username);
+    resetPasswordForm();
+  }
+
+  async function handleChangePassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (passwordUserId === null) {
+      return;
+    }
+
+    if (newPassword.length === 0) {
+      setPasswordError("Password is required.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+
+    setPasswordError(null);
+
+    const success = await changeUserPassword(passwordUserId, { password: newPassword });
+    if (success) {
+      closePasswordModal();
+    }
+  }
+
   const resetCreateForm = useCallback(() => {
     setCreateUsername("");
     setCreatePassword("");
@@ -138,7 +188,8 @@ export default function UsersListPage() {
     closeCreateModal();
   }
 
-  const anyModalOpen = createModalOpen || editingUserId !== null;
+  const anyModalOpen =
+    createModalOpen || editingUserId !== null || passwordUserId !== null;
 
   useEffect(() => {
     if (!anyModalOpen) {
@@ -152,7 +203,9 @@ export default function UsersListPage() {
       if (event.key !== "Escape") {
         return;
       }
-      if (editingUserId !== null) {
+      if (passwordUserId !== null) {
+        closePasswordModal();
+      } else if (editingUserId !== null) {
         closeEditModal();
       } else {
         setCreateModalOpen(false);
@@ -165,7 +218,14 @@ export default function UsersListPage() {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = prevOverflow;
     };
-  }, [anyModalOpen, editingUserId, closeEditModal, resetCreateForm]);
+  }, [
+    anyModalOpen,
+    editingUserId,
+    passwordUserId,
+    closeEditModal,
+    closePasswordModal,
+    resetCreateForm,
+  ]);
 
   return (
     <AdminShell
@@ -225,6 +285,14 @@ export default function UsersListPage() {
                             disabled={isLoading}
                           >
                             Edit
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => startChangePassword(user)}
+                            disabled={isLoading}
+                          >
+                            Change password
                           </Button>
                           <Button
                             type="button"
@@ -427,6 +495,80 @@ export default function UsersListPage() {
                 </Button>
                 <Button type="submit" disabled={isLoading}>
                   {isLoading ? "Saving..." : "Save changes"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {passwordUserId !== null ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/50 p-4 sm:items-center"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closePasswordModal();
+            }
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={passwordDialogTitleId}
+            className="max-h-[min(90vh,720px)] w-full max-w-md overflow-y-auto rounded-xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-zinc-950"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <h2
+              id={passwordDialogTitleId}
+              className="text-lg font-semibold text-zinc-900 dark:text-zinc-50"
+            >
+              Change password
+            </h2>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              Set a new password for{" "}
+              <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                {passwordUsername}
+              </span>
+              .
+            </p>
+            <form className="mt-4 grid gap-3" onSubmit={handleChangePassword}>
+              <FormField label="New password">
+                <Input
+                  type="password"
+                  value={newPassword}
+                  onChange={(event) => setNewPassword(event.target.value)}
+                  required
+                  autoComplete="new-password"
+                  autoFocus
+                />
+              </FormField>
+
+              <FormField label="Confirm new password">
+                <Input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  required
+                  autoComplete="new-password"
+                />
+              </FormField>
+
+              {passwordError ? (
+                <p className="text-sm text-red-600 dark:text-red-400">{passwordError}</p>
+              ) : null}
+
+              <div className="mt-1 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={closePasswordModal}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Saving..." : "Update password"}
                 </Button>
               </div>
             </form>

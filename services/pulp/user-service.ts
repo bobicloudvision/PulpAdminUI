@@ -1,5 +1,6 @@
 import { readApiDetail } from "./http";
 import {
+  ChangePulpUserPasswordPayload,
   CreatePulpUserPayload,
   PulpUser,
   ServiceResult,
@@ -60,6 +61,26 @@ export const pulpUserService = {
   async remove(id: number): Promise<ServiceResult> {
     const response = await fetch(`${USERS_PATH}/${id}`, {
       method: "DELETE",
+    });
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        detail: await readApiDetail(response),
+      };
+    }
+
+    return { ok: true };
+  },
+
+  async changePassword(
+    id: number,
+    payload: ChangePulpUserPasswordPayload
+  ): Promise<ServiceResult> {
+    const response = await fetch(`${USERS_PATH}/${id}/password`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {

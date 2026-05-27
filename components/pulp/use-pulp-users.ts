@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePulpAuthContext } from "./auth-context";
 import {
+  ChangePulpUserPasswordPayload,
   CreatePulpUserPayload,
   PulpUser,
   UpdatePulpUserPayload,
@@ -92,11 +93,18 @@ export function usePulpUsers(enabled: boolean) {
     [runMutation]
   );
 
+  const changeUserPassword = useCallback(
+    async (id: number, payload: ChangePulpUserPasswordPayload) =>
+      runMutation(() => pulpUserService.changePassword(id, payload)),
+    [runMutation]
+  );
+
   return {
     users,
     refreshUsers,
     createUser,
     updateUser,
     deleteUser,
+    changeUserPassword,
   };
 }
