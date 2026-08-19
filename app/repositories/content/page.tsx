@@ -10,6 +10,7 @@ import { useRequireAuth } from "@/components/pulp/use-require-auth";
 import { usePulpUsers } from "@/components/pulp/use-pulp-users";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { extractRpmPackageContentId } from "@/lib/extract-rpm-package-content-id";
+import { formatBytes } from "@/lib/format-bytes";
 import { pulpRepositoryManagementService } from "@/services/pulp/repository-management-service";
 import {
   Table,
@@ -32,6 +33,7 @@ function RepositoryContentInner() {
   const { groups } = usePulpGroups(hasSession);
 
   const [count, setCount] = useState(0);
+  const [totalSizeBytes, setTotalSizeBytes] = useState<number | null>(null);
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
 
@@ -39,6 +41,7 @@ function RepositoryContentInner() {
     if (!hasSession || !pulpHref) {
       setRows([]);
       setCount(0);
+      setTotalSizeBytes(null);
       return;
     }
 
@@ -51,11 +54,13 @@ function RepositoryContentInner() {
         const data = await pulpRepositoryManagementService.listRepositoryContent(pulpHref);
         if (!active) return;
         setCount(data.count);
+        setTotalSizeBytes(data.totalSizeBytes);
         setRows(data.results);
       } catch (e) {
         if (active) {
           setRows([]);
           setCount(0);
+          setTotalSizeBytes(null);
           setError(e instanceof Error ? e.message : "Failed to load repository content.");
         }
       } finally {
@@ -106,7 +111,14 @@ function RepositoryContentInner() {
             <CardContent className="break-all font-mono text-xs">{pulpHref}</CardContent>
           </Card>
           <Card>
-            <CardTitle>Content ({count})</CardTitle>
+            <CardTitle className="flex flex-wrap items-baseline justify-between gap-2">
+              <span>Content ({count})</span>
+              {totalSizeBytes !== null ? (
+                <span className="text-sm font-normal text-zinc-500 dark:text-zinc-400">
+                  Total size: {formatBytes(totalSizeBytes)}
+                </span>
+              ) : null}
+            </CardTitle>
             <CardContent>
               <TableWrapper>
                 <Table>
@@ -114,6 +126,9 @@ function RepositoryContentInner() {
                     <TableRow>
                       <TableHeaderCell>Label</TableHeaderCell>
                       <TableHeaderCell>Pulp href</TableHeaderCell>
+                      {totalSizeBytes !== null ? (
+                        <TableHeaderCell className="text-right">Size</TableHeaderCell>
+                      ) : null}
                       <TableHeaderCell className="text-right">Review</TableHeaderCell>
                     </TableRow>
                   </TableHead>
@@ -125,6 +140,11 @@ function RepositoryContentInner() {
                         <TableRow key={href ?? String(idx)}>
                           <TableCell className="max-w-xs truncate text-sm">{rowLabel(row)}</TableCell>
                           <TableCell className="max-w-md truncate font-mono text-xs">{href ?? "-"}</TableCell>
+                          {totalSizeBytes !== null ? (
+                            <TableCell className="text-right text-sm">
+                              {formatBytes(row.size_package)}
+                            </TableCell>
+                          ) : null}
                           <TableCell className="text-right">
                             {pkgId ? (
                               <Link

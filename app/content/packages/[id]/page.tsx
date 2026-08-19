@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { FormField } from "@/components/ui/form-field";
+import { formatBytes } from "@/lib/format-bytes";
 import { pulpContentService } from "@/services/pulp/content-service";
 import {
   pulpRepositoryManagementService,
@@ -40,15 +41,6 @@ function valueOf(value: unknown): string {
   if (typeof value === "string") return value;
   if (typeof value === "number" || typeof value === "boolean") return String(value);
   return JSON.stringify(value);
-}
-
-function formatBytes(value: unknown): string {
-  if (typeof value !== "number" || Number.isNaN(value)) return "-";
-  if (value === 0) return "0 B";
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  const exp = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
-  const formatted = value / 1024 ** exp;
-  return `${formatted.toFixed(exp === 0 ? 0 : 2)} ${units[exp]}`;
 }
 
 function normalizeUrl(raw: unknown): string | null {

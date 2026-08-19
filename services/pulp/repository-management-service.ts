@@ -27,6 +27,7 @@ export type RepositoryCreateResult = {
 
 export type RepositoryContentListResult = {
   count: number;
+  totalSizeBytes: number | null;
   results: Record<string, unknown>[];
 };
 

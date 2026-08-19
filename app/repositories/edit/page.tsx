@@ -11,6 +11,7 @@ import { usePulpUsers } from "@/components/pulp/use-pulp-users";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { FormField } from "@/components/ui/form-field";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Input } from "@/components/ui/input";
 import { pulpDistributionService } from "@/services/pulp/distribution-service";
 import { pulpRepositoryManagementService } from "@/services/pulp/repository-management-service";
@@ -536,7 +537,14 @@ function RepositoriesEditInner() {
                       rows={3}
                     />
                   </FormField>
-                  <FormField label="Retain repository versions">
+                  <FormField
+                    label={
+                      <span className="inline-flex items-center gap-1.5">
+                        Retain repository versions
+                        <InfoTooltip text="Caps how many historical repository versions Pulp keeps. Older versions beyond this number are pruned automatically on the next publish. Doesn't remove packages still present in the latest version." />
+                      </span>
+                    }
+                  >
                     <Input
                       type="number"
                       min={0}
@@ -590,7 +598,14 @@ function RepositoriesEditInner() {
                       className="font-mono text-xs"
                     />
                   </FormField>
-                  <FormField label="Retain package versions">
+                  <FormField
+                    label={
+                      <span className="inline-flex items-center gap-1.5">
+                        Retain package versions
+                        <InfoTooltip text="Keeps only the N most recent builds of each package (by NEVRA) in the latest repository version. Set to 1 to keep just the newest build of every package. 0 = keep all. Applies the next time a repository version is created, e.g. via publish." />
+                      </span>
+                    }
+                  >
                     <Input
                       type="number"
                       min={0}
@@ -658,6 +673,7 @@ function RepositoriesEditInner() {
                         onChange={(e) => setSaveAlsoPublish(e.target.checked)}
                       />
                       Publish repository
+                      <InfoTooltip text="Creates a new repository version right after save, which is what actually applies retain_repo_versions / retain_package_versions pruning. Without this, changed retention settings only take effect on the next publish." />
                     </label>
                     <label className="flex cursor-pointer items-center gap-2 text-sm">
                       <input
