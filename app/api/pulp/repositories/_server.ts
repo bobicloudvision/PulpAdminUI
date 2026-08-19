@@ -1,4 +1,5 @@
 import { getPulpApiUrl, getPulpBaseUrl } from "@/lib/pulp";
+import type { PulpTaskProgressReport } from "@/services/pulp/types";
 
 export type CreatedResourceEntry = string | { pulp_href?: string; href?: string };
 
@@ -8,6 +9,7 @@ export type TaskResponse = {
   created_resources?: CreatedResourceEntry[];
   pulp_href?: string;
   href?: string;
+  progress_reports?: PulpTaskProgressReport[];
 };
 
 export function hrefFromCreatedResource(entry: CreatedResourceEntry | undefined): string | null {

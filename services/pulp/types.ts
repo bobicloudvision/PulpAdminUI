@@ -90,6 +90,12 @@ export type PulpTask = {
   reserved_resources_record: string[];
 };
 
+export type PulpOrphanCleanupResult = {
+  task: string;
+  state: string;
+  progress_reports: PulpTaskProgressReport[];
+};
+
 export type PulpTaskSchedule = {
   pulp_href: string;
   pulp_created: string;

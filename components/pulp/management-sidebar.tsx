@@ -27,7 +27,8 @@ type NavIconName =
   | "content"
   | "distributions"
   | "upload"
-  | "repos";
+  | "repos"
+  | "orphans";
 
 type NavItem = {
   href: string;
@@ -93,6 +94,17 @@ const navSections = [
         label: "Workers",
         hint: "Task workers and heartbeats",
         icon: "workers",
+      },
+    ] satisfies NavItem[],
+  },
+  {
+    title: "Maintenance",
+    items: [
+      {
+        href: "/orphans/cleanup",
+        label: "Orphan cleanup",
+        hint: "Remove content and artifacts no longer used by any repository",
+        icon: "orphans",
       },
     ] satisfies NavItem[],
   }
@@ -229,6 +241,23 @@ function SidebarIcon({ name }: { name: NavIconName }) {
           <ellipse cx="12" cy="6" rx="7" ry="2.5" />
           <path d="M5 6v5c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V6" />
           <path d="M5 11v5c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-5" />
+        </svg>
+      );
+    case "orphans":
+      return (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.65"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={iconClassName}
+        >
+          <path d="M5 7h14" />
+          <path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7" />
+          <path d="M6.5 7 7.3 18.5A2 2 0 0 0 9.3 20.3h5.4a2 2 0 0 0 2-1.8L17.5 7" />
+          <path d="M10 10.5v6M14 10.5v6" />
         </svg>
       );
     default:
