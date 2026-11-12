@@ -1,6 +1,12 @@
 import { cookies } from "next/headers";
-import { getPulpApiUrl, getPulpBaseUrl, PULP_AUTH_COOKIE, toBasicAuthHeader } from "@/lib/pulp";
-import { requirePulpAuth } from "@/app/api/pulp/_helpers";
+import {
+  getPulpApiUrl,
+  getPulpBaseUrl,
+  PULP_AUTH_COOKIE,
+  toBasicAuthHeader,
+} from "@/lib/pulp";
+import { pulpFailureResponse, requirePulpAuth } from "@/app/api/pulp/_helpers";
+import { searchRpmPackages } from "./_search";
 
 type CreateRpmRequestBody = {
   artifact?: string;
@@ -167,6 +173,41 @@ async function findExistingRpmContent(
   }
 
   return fetchFirst(queryParams.join("&"));
+}
+
+function clampInt(raw: string | null, fallback: number, min: number, max: number): number {
+  const n = Number.parseInt(raw ?? "", 10);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+/**
+ * Searches RPM packages. Query: ?search=<text>&limit=&offset=
+ * A 64-char hex value matches sha256 exactly; anything else matches package names (see ./_search).
+ */
+export async function GET(request: Request) {
+  const authResult = await requirePulpAuth();
+  if (!authResult.ok) {
+    return authResult.response;
+  }
+
+  const url = new URL(request.url);
+  const search = url.searchParams.get("search")?.trim() ?? "";
+  if (!search) {
+    return Response.json({ detail: "Search text is required." }, { status: 400 });
+  }
+
+  const result = await searchRpmPackages(
+    authResult.auth,
+    search,
+    clampInt(url.searchParams.get("limit"), 20, 1, 200),
+    clampInt(url.searchParams.get("offset"), 0, 0, Number.MAX_SAFE_INTEGER)
+  );
+  if (!result.ok) {
+    return pulpFailureResponse(result);
+  }
+
+  return Response.json(result.data);
 }
 
 export async function POST(request: Request) {

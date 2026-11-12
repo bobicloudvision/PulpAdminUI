@@ -147,6 +147,24 @@ export type PulpContentItem = {
   artifacts: Record<string, string>;
 };
 
+/** Subset of RpmPackageResponse returned by the content search. */
+export type PulpRpmPackageSearchRow = {
+  pulp_href: string;
+  pulp_created: string;
+  name: string;
+  epoch: string | null;
+  version: string;
+  release: string;
+  arch: string;
+  location_href: string;
+};
+
+export type PulpRpmPackageSearchResponse = PulpPaginatedResponse<PulpRpmPackageSearchRow> & {
+  /** "server": Pulp name__contains (case-sensitive); "index": local case-insensitive scan (older pulp_rpm). */
+  match: "server" | "index";
+  index_truncated: boolean;
+};
+
 export type PulpUploadCreateResult = {
   filename: string;
   size: number;
