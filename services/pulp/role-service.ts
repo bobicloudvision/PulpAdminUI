@@ -1,4 +1,5 @@
 import { readApiDetail } from "./http";
+import { RoleObjectListResponse, RoleObjectTypeKey } from "@/lib/pulp-role-objects";
 import {
   CreatePulpRolePayload,
   PutPulpRolePayload,
@@ -147,6 +148,21 @@ export const pulpRoleService = {
     }
 
     return { ok: true };
+  },
+
+  /** All roles (Pulp ships ~100 built-in ones; capped at 500 by the proxy). */
+  async listAll(): Promise<PulpRole[]> {
+    const page = await this.list({ limit: 500, offset: 0 });
+    return page.results;
+  },
+
+  /** Objects a role can be scoped to, e.g. all RPM repositories for "rpm.rpmrepository". */
+  async listObjects(type: RoleObjectTypeKey): Promise<RoleObjectListResponse> {
+    const response = await fetch(`/api/pulp/role-objects?type=${encodeURIComponent(type)}`);
+    if (!response.ok) {
+      throw new Error(await readApiDetail(response));
+    }
+    return (await response.json()) as RoleObjectListResponse;
   },
 
   async remove(id: string): Promise<ServiceResult> {

@@ -9,14 +9,40 @@ export type ServiceResult =
       detail: string;
     };
 
+/** Matches OpenAPI components/schemas/UserGroupResponse. */
+export type PulpUserGroupRef = {
+  name: string;
+  pulp_href: string;
+};
+
 export type PulpUser = {
   id: number;
+  pulp_href?: string;
   username: string;
   first_name: string;
   last_name: string;
   email: string;
   is_staff: boolean;
   is_active: boolean;
+  groups?: PulpUserGroupRef[];
+};
+
+/** Matches OpenAPI components/schemas/UserRoleResponse. */
+export type PulpUserRoleAssignment = {
+  pulp_href: string;
+  pulp_created: string;
+  role: string;
+  content_object: string | null;
+  content_object_prn?: string | null;
+  domain?: string | null;
+  description?: string | null;
+  permissions?: string[];
+};
+
+export type CreatePulpUserRolePayload = {
+  role: string;
+  /** pulp_href of the object to scope the role to; null/omitted = model-level (global). */
+  content_object?: string | null;
 };
 
 export type PulpGroup = {

@@ -6,6 +6,7 @@ import { AdminShell } from "@/components/pulp/admin-shell";
 import { usePulpAuthContext } from "@/components/pulp/auth-context";
 import { usePulpGroups } from "@/components/pulp/use-pulp-groups";
 import { useRequireAuth } from "@/components/pulp/use-require-auth";
+import { UserAccessDialog } from "@/components/pulp/user-access-dialog";
 import { usePulpUsers } from "@/components/pulp/use-pulp-users";
 import { CreatePulpUserPayload, UpdatePulpUserPayload } from "@/services/pulp/types";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +27,7 @@ export default function UsersListPage() {
   const { sessionUser, isLoading, isCheckingSession, hasSession, error, logout } =
     usePulpAuthContext();
   const isRedirectingToLogin = useRequireAuth({ hasSession, isCheckingSession });
-  const { users, createUser, updateUser, deleteUser, changeUserPassword } =
+  const { users, refreshUsers, createUser, updateUser, deleteUser, changeUserPassword } =
     usePulpUsers(hasSession);
   const { groups } = usePulpGroups(hasSession);
 
@@ -56,6 +57,10 @@ export default function UsersListPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const [accessUserId, setAccessUserId] = useState<number | null>(null);
+  const accessUser = accessUserId === null ? null : users.find((u) => u.id === accessUserId) ?? null;
+  const closeAccessModal = useCallback(() => setAccessUserId(null), []);
 
   const resetEditForm = useCallback(() => {
     setEditUsername("");
@@ -189,7 +194,7 @@ export default function UsersListPage() {
   }
 
   const anyModalOpen =
-    createModalOpen || editingUserId !== null || passwordUserId !== null;
+    createModalOpen || editingUserId !== null || passwordUserId !== null || accessUserId !== null;
 
   useEffect(() => {
     if (!anyModalOpen) {
@@ -203,7 +208,9 @@ export default function UsersListPage() {
       if (event.key !== "Escape") {
         return;
       }
-      if (passwordUserId !== null) {
+      if (accessUserId !== null) {
+        closeAccessModal();
+      } else if (passwordUserId !== null) {
         closePasswordModal();
       } else if (editingUserId !== null) {
         closeEditModal();
@@ -222,8 +229,10 @@ export default function UsersListPage() {
     anyModalOpen,
     editingUserId,
     passwordUserId,
+    accessUserId,
     closeEditModal,
     closePasswordModal,
+    closeAccessModal,
     resetCreateForm,
   ]);
 
@@ -256,6 +265,7 @@ export default function UsersListPage() {
                   <TableRow>
                     <TableHeaderCell>Username</TableHeaderCell>
                     <TableHeaderCell>Email</TableHeaderCell>
+                    <TableHeaderCell>Groups</TableHeaderCell>
                     <TableHeaderCell>Staff</TableHeaderCell>
                     <TableHeaderCell>Active</TableHeaderCell>
                     <TableHeaderCell className="text-right">Actions</TableHeaderCell>
@@ -266,6 +276,19 @@ export default function UsersListPage() {
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.username}</TableCell>
                       <TableCell>{user.email || "-"}</TableCell>
+                      <TableCell>
+                        {user.groups && user.groups.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {user.groups.map((group) => (
+                              <Badge key={group.pulp_href} variant="outline">
+                                {group.name}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge variant={user.is_staff ? "default" : "outline"}>
                           {user.is_staff ? "Staff" : "Standard"}
@@ -285,6 +308,14 @@ export default function UsersListPage() {
                             disabled={isLoading}
                           >
                             Edit
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setAccessUserId(user.id)}
+                            disabled={isLoading}
+                          >
+                            Groups &amp; roles
                           </Button>
                           <Button
                             type="button"
@@ -574,6 +605,16 @@ export default function UsersListPage() {
             </form>
           </div>
         </div>
+      ) : null}
+
+      {accessUser ? (
+        <UserAccessDialog
+          key={accessUser.id}
+          user={accessUser}
+          groups={groups}
+          onClose={closeAccessModal}
+          onGroupsChanged={refreshUsers}
+        />
       ) : null}
     </AdminShell>
   );
