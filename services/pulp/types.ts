@@ -102,10 +102,11 @@ export type PulpStatusApp = {
 
 /** Subset of Pulp's StatusResponse (GET /status/). */
 export type PulpStatus = {
-  versions: { component: string; version: string; package?: string }[];
-  online_workers: PulpStatusApp[];
-  online_api_apps: PulpStatusApp[];
-  online_content_apps: PulpStatusApp[];
+  versions?: { component: string; version: string; package?: string }[];
+  online_workers?: PulpStatusApp[];
+  /** Only reported by newer pulpcore (not 3.22). */
+  online_api_apps?: PulpStatusApp[];
+  online_content_apps?: PulpStatusApp[];
   database_connection: { connected: boolean } | null;
   redis_connection: { connected: boolean } | null;
   storage: { total: number; used: number; free: number } | null;

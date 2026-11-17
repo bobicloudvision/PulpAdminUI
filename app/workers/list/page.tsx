@@ -152,14 +152,14 @@ export default function WorkersListPage() {
   const statuses = workers.map((w) => workerStatus(w, now));
   const busyCount = statuses.filter((s) => s === "busy").length;
   const idleCount = statuses.filter((s) => s === "idle").length;
-  const onlineWorkers = status?.online_workers.length ?? null;
+  const onlineWorkers = status?.online_workers?.length ?? null;
 
   const storage = status?.storage ?? null;
   const storagePct = storage && storage.total > 0 ? Math.round((storage.used / storage.total) * 100) : null;
   const db = status?.database_connection?.connected;
   const redis = status?.redis_connection ? status.redis_connection.connected : null;
-  const core = status?.versions.find((v) => v.component === "core")?.version;
-  const plugins = status?.versions.filter((v) => v.component !== "core") ?? [];
+  const core = status?.versions?.find((v) => v.component === "core")?.version;
+  const plugins = status?.versions?.filter((v) => v.component !== "core") ?? [];
 
   const queueStalled = queue !== null && queue.waiting > 0 && onlineWorkers === 0;
 
@@ -379,8 +379,10 @@ export default function WorkersListPage() {
               <CardTitle>Services</CardTitle>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <AppList title="API apps" apps={status.online_api_apps} now={now} />
-                  <AppList title="Content apps" apps={status.online_content_apps} now={now} />
+                  {status.online_api_apps ? (
+                    <AppList title="API apps" apps={status.online_api_apps} now={now} />
+                  ) : null}
+                  <AppList title="Content apps" apps={status.online_content_apps ?? []} now={now} />
                 </div>
                 {core ? (
                   <div className="flex flex-wrap items-center gap-1.5 border-t border-zinc-200 pt-3 text-xs dark:border-zinc-800">
