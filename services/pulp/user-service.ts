@@ -8,12 +8,13 @@ import {
   ServiceResult,
   UpdatePulpUserPayload,
 } from "./types";
+import { API_BASE } from "@/lib/base-path";
 
 type PulpListResponse<T> = {
   results: T[];
 };
 
-const USERS_PATH = "/api/pulp/users";
+const USERS_PATH = `${API_BASE}/users`;
 
 export const pulpUserService = {
   async list(): Promise<PulpUser[]> {

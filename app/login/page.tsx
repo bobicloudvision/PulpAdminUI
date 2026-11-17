@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { withBasePath } from "@/lib/base-path";
 import { AlertCircle, KeyRound, Loader2, UserRound } from "lucide-react";
 import { pulpAuthService } from "@/services/pulp/auth-service";
 import { Button } from "@/components/ui/button";
@@ -72,7 +73,7 @@ export default function LoginPage() {
           <header className="mb-10 text-center">
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
               <Image
-                src="/pulp_logo_icon.svg"
+                src={withBasePath("/pulp_logo_icon.svg")}
                 alt="Pulp"
                 width={56}
                 height={47}

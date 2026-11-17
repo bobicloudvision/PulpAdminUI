@@ -1,5 +1,6 @@
 import { readApiDetail } from "./http";
 import { PulpDistribution, ServiceResult, UpdatePulpDistributionPayload } from "./types";
+import { API_BASE } from "@/lib/base-path";
 
 export type CreateRpmDistributionResult = {
   name: string;
@@ -13,7 +14,7 @@ type PulpListResponse<T> = {
   results: T[];
 };
 
-const DISTRIBUTIONS_PATH = "/api/pulp/distributions";
+const DISTRIBUTIONS_PATH = `${API_BASE}/distributions`;
 
 function encodeDistributionRef(pulpHref: string): string | null {
   const normalized = pulpHref.trim();
@@ -30,7 +31,7 @@ export const pulpDistributionService = {
     name: string;
     base_path: string;
   }): Promise<CreateRpmDistributionResult> {
-    const response = await fetch("/api/pulp/distributions/rpm/create", {
+    const response = await fetch(`${API_BASE}/distributions/rpm/create`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

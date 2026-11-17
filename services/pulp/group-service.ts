@@ -5,12 +5,13 @@ import {
   ServiceResult,
   UpdatePulpGroupPayload,
 } from "./types";
+import { API_BASE } from "@/lib/base-path";
 
 type PulpListResponse<T> = {
   results: T[];
 };
 
-const GROUPS_PATH = "/api/pulp/groups";
+const GROUPS_PATH = `${API_BASE}/groups`;
 
 export const pulpGroupService = {
   async list(): Promise<PulpGroup[]> {

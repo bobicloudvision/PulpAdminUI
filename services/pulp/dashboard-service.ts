@@ -1,6 +1,7 @@
 import { readApiDetail } from "./http";
+import { API_BASE } from "@/lib/base-path";
 
-const DASHBOARD_PATH = "/api/pulp/dashboard-summary";
+const DASHBOARD_PATH = `${API_BASE}/dashboard-summary`;
 
 export type PulpDashboardSummary = {
   ok: true;

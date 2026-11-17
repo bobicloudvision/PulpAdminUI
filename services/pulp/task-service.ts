@@ -7,8 +7,9 @@ import {
   PulpTaskFilters,
   ServiceResult,
 } from "./types";
+import { API_BASE } from "@/lib/base-path";
 
-const TASKS_PATH = "/api/pulp/tasks";
+const TASKS_PATH = `${API_BASE}/tasks`;
 
 function filterParams(filters: PulpTaskFilters | undefined, into: URLSearchParams): URLSearchParams {
   if (filters?.state) into.set("state", filters.state);

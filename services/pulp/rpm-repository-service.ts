@@ -1,7 +1,8 @@
 import { readApiDetail } from "./http";
 import { PulpPaginatedResponse, PulpRpmRepository } from "./types";
+import { API_BASE } from "@/lib/base-path";
 
-const RPM_REPOS_PATH = "/api/pulp/repositories/rpm";
+const RPM_REPOS_PATH = `${API_BASE}/repositories/rpm`;
 
 export const pulpRpmRepositoryService = {
   async list(limit = 200, offset = 0): Promise<PulpPaginatedResponse<PulpRpmRepository>> {
