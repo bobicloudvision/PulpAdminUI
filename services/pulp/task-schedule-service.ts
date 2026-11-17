@@ -1,7 +1,8 @@
 import { readApiDetail } from "./http";
 import { PulpPaginatedResponse, PulpTaskSchedule } from "./types";
+import { API_BASE } from "@/lib/base-path";
 
-const TASK_SCHEDULES_PATH = "/api/pulp/task-schedules";
+const TASK_SCHEDULES_PATH = `${API_BASE}/task-schedules`;
 
 export const pulpTaskScheduleService = {
   async list(params: { limit: number; offset: number }): Promise<PulpPaginatedResponse<PulpTaskSchedule>> {

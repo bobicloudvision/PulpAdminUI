@@ -47,6 +47,8 @@ Web admin console for [Pulp 3](https://pulpproject.org/)—manage users, groups,
 
    Set `PULP_BASE_URL` to your Pulp API v3 base (e.g. `https://your-host/pulp/api/v3`) and `PULP_PROJECT_NAME` for the sidebar logo title.
 
+   To serve the UI under a sub-path behind a reverse proxy (e.g. `https://host/pulp-admin/`), also set `BASE_PATH=/pulp-admin`. It is read by `next.config.ts` at **both** `npm run build` and `npm run start`, so keep it in the environment of both (e.g. `.env` and the service unit). The proxy must pass the full path through, e.g. nginx `location /pulp-admin { proxy_pass http://127.0.0.1:3000; }` (no trailing path on `proxy_pass`).
+
 2. Install and run:
 
    ```bash

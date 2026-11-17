@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { withBasePath } from "@/lib/base-path";
 import { cn } from "@/components/ui/cn";
 
 const PROJECT_NAME = process.env.NEXT_PUBLIC_PULP_PROJECT_NAME;
@@ -277,7 +278,7 @@ export function ManagementSidebar({ usersCount, groupsCount }: ManagementSidebar
         >
           <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-zinc-200/90 bg-white shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-out group-hover/brand:scale-[1.03] group-hover/brand:border-zinc-300 group-hover/brand:shadow-md motion-reduce:group-hover/brand:scale-100 dark:border-zinc-700 dark:bg-zinc-900 dark:group-hover/brand:border-zinc-600">
             <Image
-              src="/pulp_logo_icon.svg"
+              src={withBasePath("/pulp_logo_icon.svg")}
               alt="Pulp"
               width={22}
               height={22}

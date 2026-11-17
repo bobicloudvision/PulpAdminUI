@@ -1,8 +1,9 @@
 import { readApiDetail } from "./http";
+import { API_BASE } from "@/lib/base-path";
 
 const API_PATHS = {
-  login: "/api/pulp/login",
-  logout: "/api/pulp/logout",
+  login: `${API_BASE}/login`,
+  logout: `${API_BASE}/logout`,
 } as const;
 
 export const pulpAuthService = {

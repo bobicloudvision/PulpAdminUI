@@ -4,13 +4,14 @@ import {
   PulpUploadAsRpmResult,
   PulpUploadCreateResult,
 } from "./types";
+import { API_BASE } from "@/lib/base-path";
 
 export const pulpUploadService = {
   async upload(file: File): Promise<PulpUploadCreateResult> {
     const formData = new FormData();
     formData.set("file", file);
 
-    const response = await fetch("/api/pulp/uploads", {
+    const response = await fetch(`${API_BASE}/uploads`, {
       method: "POST",
       body: formData,
     });
@@ -23,7 +24,7 @@ export const pulpUploadService = {
   },
 
   async uploadAsRpm(artifact: string): Promise<PulpUploadAsRpmResult> {
-    const response = await fetch("/api/pulp/content/rpm/packages", {
+    const response = await fetch(`${API_BASE}/content/rpm/packages`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ artifact }),
@@ -40,7 +41,7 @@ export const pulpUploadService = {
     content: string,
     repositoryName: string
   ): Promise<PulpAddToRepositoryResult> {
-    const response = await fetch("/api/pulp/repositories/rpm/add-content", {
+    const response = await fetch(`${API_BASE}/repositories/rpm/add-content`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content, repositoryName }),

@@ -1,9 +1,10 @@
 import { readApiDetail } from "./http";
 import { PulpOrphanCleanupResult } from "./types";
+import { API_BASE } from "@/lib/base-path";
 
 export const pulpOrphanService = {
   async cleanup(orphanProtectionTimeMinutes?: number): Promise<PulpOrphanCleanupResult> {
-    const response = await fetch("/api/pulp/orphans/cleanup", {
+    const response = await fetch(`${API_BASE}/orphans/cleanup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

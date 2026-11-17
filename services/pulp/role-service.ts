@@ -8,8 +8,9 @@ import {
   ServiceResult,
   UpdatePulpRolePayload,
 } from "./types";
+import { API_BASE } from "@/lib/base-path";
 
-const ROLES_PATH = "/api/pulp/roles";
+const ROLES_PATH = `${API_BASE}/roles`;
 
 const ROLE_ID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -158,7 +159,7 @@ export const pulpRoleService = {
 
   /** Objects a role can be scoped to, e.g. all RPM repositories for "rpm.rpmrepository". */
   async listObjects(type: RoleObjectTypeKey): Promise<RoleObjectListResponse> {
-    const response = await fetch(`/api/pulp/role-objects?type=${encodeURIComponent(type)}`);
+    const response = await fetch(`${API_BASE}/role-objects?type=${encodeURIComponent(type)}`);
     if (!response.ok) {
       throw new Error(await readApiDetail(response));
     }

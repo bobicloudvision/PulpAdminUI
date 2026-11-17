@@ -5,8 +5,9 @@ import {
   PulpRpmPackage,
   PulpRpmPackageSearchResponse,
 } from "./types";
+import { API_BASE } from "@/lib/base-path";
 
-const CONTENT_PATH = "/api/pulp/content";
+const CONTENT_PATH = `${API_BASE}/content`;
 
 export const pulpContentService = {
   async list(limit: number, offset: number): Promise<PulpPaginatedResponse<PulpContentItem>> {
@@ -24,7 +25,7 @@ export const pulpContentService = {
     offset: number
   ): Promise<PulpRpmPackageSearchResponse> {
     const qs = new URLSearchParams({ search, limit: String(limit), offset: String(offset) });
-    const response = await fetch(`/api/pulp/content/rpm/packages?${qs}`);
+    const response = await fetch(`${API_BASE}/content/rpm/packages?${qs}`);
     if (!response.ok) {
       throw new Error(await readApiDetail(response));
     }
@@ -33,7 +34,7 @@ export const pulpContentService = {
   },
 
   async getRpmPackage(id: string): Promise<PulpRpmPackage> {
-    const response = await fetch(`/api/pulp/content/rpm/packages/${id}`);
+    const response = await fetch(`${API_BASE}/content/rpm/packages/${id}`);
     if (!response.ok) {
       throw new Error(await readApiDetail(response));
     }
