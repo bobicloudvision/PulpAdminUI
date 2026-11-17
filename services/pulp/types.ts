@@ -87,6 +87,49 @@ export type PulpWorker = {
   name: string;
   last_heartbeat: string;
   current_task: string | null;
+  /** Added by the /api/pulp/workers proxy for busy workers. */
+  current_task_detail?: {
+    name: string;
+    state: string;
+    started_at: string | null;
+  } | null;
+};
+
+export type PulpStatusApp = {
+  name: string;
+  last_heartbeat: string;
+};
+
+/** Subset of Pulp's StatusResponse (GET /status/). */
+export type PulpStatus = {
+  versions: { component: string; version: string; package?: string }[];
+  online_workers: PulpStatusApp[];
+  online_api_apps: PulpStatusApp[];
+  online_content_apps: PulpStatusApp[];
+  database_connection: { connected: boolean } | null;
+  redis_connection: { connected: boolean } | null;
+  storage: { total: number; used: number; free: number } | null;
+  content_settings?: { content_origin: string; content_path_prefix: string } | null;
+};
+
+export const PULP_TASK_STATES = ["waiting", "running", "failed", "completed", "canceled", "canceling", "skipped"] as const;
+export type PulpTaskState = (typeof PULP_TASK_STATES)[number];
+
+export type PulpTaskFilters = {
+  state?: PulpTaskState | null;
+  name?: string | null;
+  worker?: string | null;
+};
+
+export type PulpTaskCounts = Partial<Record<PulpTaskState, number>>;
+
+export type PulpTaskBulkCancelResult = {
+  /** Tasks attempted (excluding ones that finished before they could be canceled). */
+  requested: number;
+  canceled: number;
+  failed: { id: string; detail: string }[];
+  /** True when more than the server-side cap (1000) matched. */
+  truncated: boolean;
 };
 
 export type PulpTaskProgressReport = {

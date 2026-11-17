@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { PULP_AUTH_COOKIE, pulpFetch } from "@/lib/pulp";
 import { requirePulpAuth } from "../_helpers";
+import { applyTaskFilters } from "./_filters";
 import { PulpPaginatedResponse, PulpTask } from "@/services/pulp/types";
 
 function parseOffset(value: string | null): number {
@@ -32,7 +33,9 @@ export async function GET(request: Request) {
   const qs = new URLSearchParams({
     limit: String(limit),
     offset: String(offset),
+    ordering: "-pulp_created",
   });
+  applyTaskFilters(url.searchParams, qs);
 
   const result = await pulpFetch<PulpPaginatedResponse<PulpTask>>(
     `/tasks/?${qs.toString()}`,
